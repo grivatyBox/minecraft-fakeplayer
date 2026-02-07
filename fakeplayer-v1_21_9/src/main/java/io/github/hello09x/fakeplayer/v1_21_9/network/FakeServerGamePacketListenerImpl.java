@@ -8,6 +8,7 @@ import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.common.ClientboundCustomPayloadPacket;
 import net.minecraft.network.protocol.common.custom.DiscardedPayload;
+import net.minecraft.network.protocol.game.ClientboundRespawnPacket;
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -56,6 +57,8 @@ public class FakeServerGamePacketListenerImpl extends ServerGamePacketListenerIm
             this.handleCustomPayloadPacket(p);
         } else if (packet instanceof ClientboundSetEntityMotionPacket p) {
             this.handleClientboundSetEntityMotionPacket(p);
+        } else if (packet instanceof ClientboundRespawnPacket p) {
+            this.handleClientboundRespawnPacket(p);
         }
     }
 
@@ -70,6 +73,15 @@ public class FakeServerGamePacketListenerImpl extends ServerGamePacketListenerIm
                 this.player.lerpMotion(movement);
             });
         }
+    }
+
+    /**
+     * 处理重生包，完成维度切换
+     * <p>当玩家切换维度时，此包会被发送。我们需要完成维度切换，否则玩家将一直处于无敌状态。</p>
+     * <p>正常玩家会发送 ServerboundAcceptTeleportPacket 来完成维度切换，但假人不会，因此需要手动调用 hasChangedDimension()</p>
+     */
+    private void handleClientboundRespawnPacket(@NotNull ClientboundRespawnPacket packet) {
+        this.player.hasChangedDimension();
     }
 
     private void handleCustomPayloadPacket(@NotNull ClientboundCustomPayloadPacket packet) {
