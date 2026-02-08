@@ -101,6 +101,7 @@ public class Fakeplayer {
         this.creator = creator;
         this.creatorIp = creatorIp;
         this.sequenceName = sequenceName;
+
         this.handle = bridge.fromServer(Bukkit.getServer()).newPlayer(uuid, name);
         this.player = handle.getPlayer();
 

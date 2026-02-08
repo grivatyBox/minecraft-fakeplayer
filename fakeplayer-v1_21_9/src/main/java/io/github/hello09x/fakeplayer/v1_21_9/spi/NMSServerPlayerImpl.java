@@ -1,6 +1,7 @@
 package io.github.hello09x.fakeplayer.v1_21_9.spi;
 
 import io.github.hello09x.fakeplayer.api.spi.NMSServerPlayer;
+import io.github.hello09x.fakeplayer.core.Main;
 import io.github.hello09x.fakeplayer.core.constant.ConstantPool;
 import io.github.hello09x.fakeplayer.core.util.Reflections;
 import io.github.hello09x.fakeplayer.v1_21_9.network.FakePlayerAdvancements;
