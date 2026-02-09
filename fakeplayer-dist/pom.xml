@@ -66,8 +66,12 @@
             <version>${revision}</version>
         </dependency>
 
-        <!-- Skip 1.21.1 - 1.21.8 due to compilation issues, will fix later -->
-        <!--
+        <dependency>
+            <groupId>io.github.hello09x.fakeplayer</groupId>
+            <artifactId>fakeplayer-v1_21</artifactId>
+            <version>${revision}</version>
+        </dependency>
+
         <dependency>
             <groupId>io.github.hello09x.fakeplayer</groupId>
             <artifactId>fakeplayer-v1_21_1</artifactId>
@@ -109,7 +113,6 @@
             <artifactId>fakeplayer-v1_21_8</artifactId>
             <version>${revision}</version>
         </dependency>
-        -->
 
         <dependency>
             <groupId>io.github.hello09x.fakeplayer</groupId>

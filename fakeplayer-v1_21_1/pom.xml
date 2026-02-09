@@ -38,6 +38,14 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- Reuse 1.21 implementations (1.21 maps to 1.21.1) -->
+        <dependency>
+            <groupId>io.github.hello09x.fakeplayer</groupId>
+            <artifactId>fakeplayer-v1_21</artifactId>
+            <version>${revision}</version>
+            <scope>provided</scope>
+        </dependency>
+
         <dependency>
             <groupId>org.spigotmc</groupId>
             <artifactId>spigot</artifactId>
