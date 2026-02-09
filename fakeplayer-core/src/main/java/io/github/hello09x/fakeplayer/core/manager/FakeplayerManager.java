@@ -221,6 +221,9 @@ public class FakeplayerManager {
             return false;
         }
 
+        // 标记为应该删除元数据（手动移除）
+        target.setMetadata(MetadataKeys.SHOULD_DELETE_METADATA, new FixedMetadataValue(Main.getInstance(), true));
+
         target.kick(textOfChildren(
                 text("[fakeplayer] "),
                 reason == null ? text("removed") : reason
@@ -236,6 +239,8 @@ public class FakeplayerManager {
     public int removeAll(@Nullable String reason) {
         var targets = getAll();
         for (var target : targets) {
+            // 标记为应该删除元数据（手动移除）
+            target.setMetadata(MetadataKeys.SHOULD_DELETE_METADATA, new FixedMetadataValue(Main.getInstance(), true));
             target.kick(text(REMOVAL_REASON_PREFIX + (reason == null ? "removed" : reason)));
         }
         return targets.size();

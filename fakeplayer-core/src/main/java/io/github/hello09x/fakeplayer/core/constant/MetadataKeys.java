@@ -16,6 +16,8 @@ public interface MetadataKeys {
 
     String AUTOFISH = "fakeplayer:autofish";
 
+    String SHOULD_DELETE_METADATA = "fakeplayer:should_delete_metadata";
+
     static @Nullable Integer getSpawnedAt(@NotNull Player player) {
         var value = Iterables.getFirst(player.getMetadata(SPAWNED_AT), null);
         if (value == null) {

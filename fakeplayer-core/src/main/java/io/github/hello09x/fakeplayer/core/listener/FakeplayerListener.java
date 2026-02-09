@@ -157,8 +157,15 @@ public class FakeplayerListener implements Listener {
                 Bukkit.getScheduler().runTaskLater(Main.getInstance(), creator::updateCommands, 1); // 需要下 1 tick 移除后才正确刷新
             }
         } finally {
-            // 不删除元数据，保留以便下次启动时恢复
-            manager.cleanup0(target);
+            // 检查是否应该删除元数据（手动移除 vs 正常退出）
+            var shouldDelete = target.hasMetadata(MetadataKeys.SHOULD_DELETE_METADATA);
+            if (shouldDelete) {
+                // 手动移除（kill/killall命令），删除元数据
+                manager.cleanup(target);
+            } else {
+                // 正常退出，保留元数据以便下次启动时恢复
+                manager.cleanup0(target);
+            }
         }
     }
 
