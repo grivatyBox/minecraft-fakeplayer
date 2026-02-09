@@ -169,7 +169,23 @@ public class FakeplayerConfig extends PluginConfig {
     @Beta
     private boolean defaultOnlineSkin;
 
+    /**
+     * 自动恢复配置
+     */
+    private AutoRestoreConfig autoRestore;
+
     private Map<Feature, String> defaultFeatures;
+
+    /**
+     * 自动恢复配置类
+     */
+    @Getter
+    public static class AutoRestoreConfig {
+        private boolean enabled = true;
+        private int delaySeconds = 5;
+        private boolean restoreOnFirstJoin = false;
+        private int maxConcurrentRestore = 5;
+    }
 
     @Inject
     public FakeplayerConfig() {
@@ -216,6 +232,7 @@ public class FakeplayerConfig extends PluginConfig {
         this.debug = file.getBoolean("debug", false);
         this.nameStyleColor = this.getNameStyleColor(file);
         this.nameStyleDecorations = this.getNameStyleDecorations(file);
+        this.autoRestore = this.getAutoRestore(file);
 
         if (this.isConfigFileOutOfDate()) {
             Bukkit.getScheduler().runTaskLater(Main.getInstance(), () -> {
@@ -301,6 +318,20 @@ public class FakeplayerConfig extends PluginConfig {
             }
         }
         return decorations;
+    }
+
+    private @NotNull AutoRestoreConfig getAutoRestore(@NotNull FileConfiguration file) {
+        var section = file.getConfigurationSection("auto-restore");
+        AutoRestoreConfig config = new AutoRestoreConfig();
+
+        if (section != null) {
+            config.enabled = section.getBoolean("enabled", true);
+            config.delaySeconds = section.getInt("delay-seconds", 5);
+            config.restoreOnFirstJoin = section.getBoolean("restore-on-first-join", false);
+            config.maxConcurrentRestore = section.getInt("max-concurrent-restore", 5);
+        }
+
+        return config;
     }
 
 }

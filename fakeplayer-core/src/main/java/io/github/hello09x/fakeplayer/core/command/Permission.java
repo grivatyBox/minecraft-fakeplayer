@@ -44,6 +44,7 @@ public interface Permission {
     String wakeup = "fakeplayer.command.wakeup";
     String cmd = "fakeplayer.command.cmd";
     String stop = "fakeplayer.command.stop";
+    String restore = "fakeplayer.command.restore";
 
 
     String op = "OP";

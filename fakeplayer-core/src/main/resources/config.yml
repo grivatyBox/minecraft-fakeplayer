@@ -12,7 +12,7 @@
 
 # DO NOT EDIT
 # 不要修改
-version: 19
+version: 20
 
 # 多国语言配置
 # 可选项: en, zh, zh_cn, zh_tw, zh_hk
@@ -291,3 +291,33 @@ default-features:
 # 检测更新
 # 仅仅是检测, 并不会帮你下载
 check-for-updates: true
+
+
+# 自动恢复配置
+# 服务器重启后自动恢复之前创建的假人
+# Auto-restore configuration
+# Automatically restore fake players after server restart
+auto-restore:
+  # 是否启用自动恢复
+  # 默认: true
+  # Enable auto-restore
+  # Default: true
+  enabled: true
+
+  # 启动后延迟恢复的时间（秒）
+  # 默认: 5
+  # Delay before restoring fake players after server starts (seconds)
+  # Default: 5
+  delay-seconds: 5
+
+  # 是否在创建者首次加入时恢复其假人
+  # 默认: false
+  # Restore fake players when their creator first joins
+  # Default: false
+  restore-on-first-join: false
+
+  # 同时恢复的最大假人数（避免服务器卡顿）
+  # 默认: 5
+  # Maximum number of fake players to restore concurrently
+  # Default: 5
+  max-concurrent-restore: 5

@@ -157,7 +157,8 @@ public class FakeplayerListener implements Listener {
                 Bukkit.getScheduler().runTaskLater(Main.getInstance(), creator::updateCommands, 1); // 需要下 1 tick 移除后才正确刷新
             }
         } finally {
-            manager.cleanup(target);
+            // 不删除元数据，保留以便下次启动时恢复
+            manager.cleanup0(target);
         }
     }
 

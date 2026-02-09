@@ -11,6 +11,7 @@ import io.github.hello09x.fakeplayer.core.manager.action.ActionManager;
 import io.github.hello09x.fakeplayer.core.manager.invsee.InvseeManager;
 import io.github.hello09x.fakeplayer.core.manager.invsee.OpenInvInvseeManagerImpl;
 import io.github.hello09x.fakeplayer.core.manager.invsee.SimpleInvseeManagerImpl;
+import io.github.hello09x.fakeplayer.core.metadata.FakeplayerMetadataStore;
 import io.github.hello09x.fakeplayer.core.placeholder.FakeplayerPlaceholderExpansion;
 import io.github.hello09x.fakeplayer.core.placeholder.FakeplayerPlaceholderExpansionImpl;
 import io.github.hello09x.fakeplayer.core.util.ClassUtils;
@@ -62,6 +63,12 @@ public class FakeplayerModule extends AbstractModule {
             throw new ExceptionInInitializerError("Unsupported Minecraft version: " + Bukkit.getMinecraftVersion());
         }
         return bridge;
+    }
+
+    @Provides
+    @Singleton
+    public @NotNull FakeplayerMetadataStore fakeplayerMetadataStore() {
+        return new FakeplayerMetadataStore(Main.getInstance().getDataFolder());
     }
 
     @Singleton

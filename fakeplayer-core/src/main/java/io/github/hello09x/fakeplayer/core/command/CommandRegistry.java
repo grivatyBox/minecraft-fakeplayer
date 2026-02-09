@@ -79,6 +79,8 @@ public class CommandRegistry {
     private DebugCommand debugCommand;
     @Inject
     private StopCommand stopCommand;
+    @Inject
+    private RestoreCommand restoreCommand;
 
     @Inject
     private FakeplayerConfig config;
@@ -444,6 +446,12 @@ public class CommandRegistry {
                                 .withShortDescription("fakeplayer.command.reload-translation.description")
                                 .withPermission(CommandPermission.OP)
                                 .executes(reloadCommand::reloadTranslation),
+                        command("restore")
+                                .withShortDescription("fakeplayer.command.restore.description")
+                                .withPermission(Permission.restore)
+                                .executes(restoreCommand::restoreAll)
+                                .withRequirement(CommandSupports::hasFakeplayer)
+                                .executesPlayer(restoreCommand::restore),
 
                         // developer debug
                         command("debug")

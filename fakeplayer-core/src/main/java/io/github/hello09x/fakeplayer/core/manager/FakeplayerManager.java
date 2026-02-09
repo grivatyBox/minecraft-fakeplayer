@@ -15,6 +15,8 @@ import io.github.hello09x.fakeplayer.core.entity.Fakeplayer;
 import io.github.hello09x.fakeplayer.core.entity.SpawnOption;
 import io.github.hello09x.fakeplayer.core.manager.feature.FakeplayerFeatureManager;
 import io.github.hello09x.fakeplayer.core.manager.naming.NameManager;
+import io.github.hello09x.fakeplayer.core.metadata.FakeplayerMetadata;
+import io.github.hello09x.fakeplayer.core.metadata.FakeplayerMetadataStore;
 import io.github.hello09x.fakeplayer.core.repository.model.Feature;
 import io.github.hello09x.fakeplayer.core.util.AddressUtils;
 import io.github.hello09x.fakeplayer.core.util.Commands;
@@ -55,15 +57,17 @@ public class FakeplayerManager {
     private final FakeplayerFeatureManager featureManager;
     private final NMSBridge nms;
     private final FakeplayerConfig config;
+    private final FakeplayerMetadataStore metadataStore;
     private final ScheduledExecutorService lagMonitor;
 
     @Inject
-    public FakeplayerManager(NameManager nameManager, FakeplayerList playerList, FakeplayerFeatureManager featureManager, NMSBridge nms, FakeplayerConfig config) {
+    public FakeplayerManager(NameManager nameManager, FakeplayerList playerList, FakeplayerFeatureManager featureManager, NMSBridge nms, FakeplayerConfig config, FakeplayerMetadataStore metadataStore) {
         this.nameManager = nameManager;
         this.playerList = playerList;
         this.featureManager = featureManager;
         this.nms = nms;
         this.config = config;
+        this.metadataStore = metadataStore;
 
         this.lagMonitor = Executors.newSingleThreadScheduledExecutor();
         this.lagMonitor.scheduleWithFixedDelay(() -> {
@@ -122,7 +126,11 @@ public class FakeplayerManager {
                     );
                 })
                 .thenComposeAsync(fp::spawnAsync)
-                .thenApply(ignored -> target);
+                .thenApply(ignored -> {
+                    // 假人成功生成后保存元数据
+                    this.saveMetadata(fp, spawnAt);
+                    return target;
+                });
     }
 
     /**
@@ -250,11 +258,11 @@ public class FakeplayerManager {
     }
 
     /**
-     * 清理假人
+     * 清理假人（不删除元数据，用于正常退出）
      *
      * @param target 假人
      */
-    public void cleanup(@NotNull Player target) {
+    public void cleanup0(@NotNull Player target) {
         var fakeplayer = this.playerList.removeByUUID(target.getUniqueId());
         if (fakeplayer == null) {
             return;
@@ -267,6 +275,20 @@ public class FakeplayerManager {
                     ActionSetting.once()
             ).tick();
         }
+        // 更新元数据中的当前位置
+        this.updateMetadataLocation(fakeplayer);
+        // 不删除元数据，保留以便下次启动时恢复
+    }
+
+    /**
+     * 清理假人（删除元数据，用于手动移除）
+     *
+     * @param target 假人
+     */
+    public void cleanup(@NotNull Player target) {
+        this.cleanup0(target);
+        // 删除元数据
+        this.removeMetadata(target.getUniqueId());
     }
 
     /**
@@ -486,8 +508,85 @@ public class FakeplayerManager {
     }
 
     public void onDisable() {
-        Exceptions.suppress(Main.getInstance(), () -> this.removeAll("Plugin disabled"));
+        // 先移除所有在线假人，但不删除元数据，以便下次启动时恢复
+        var targets = getAll();
+        for (var target : targets) {
+            target.kick(text("[fakeplayer] Plugin disabled"));  // 只踢出玩家，不调用 cleanup
+        }
         Exceptions.suppress(Main.getInstance(), this.lagMonitor::shutdownNow);
+    }
+
+    /**
+     * 保存假人元数据
+     *
+     * @param fp      假人
+     * @param spawnedAt 生成位置
+     */
+    private void saveMetadata(@NotNull Fakeplayer fp, @NotNull Location spawnedAt) {
+        try {
+            var metadata = new FakeplayerMetadata();
+            metadata.setUuid(fp.getUUID());
+            metadata.setSequenceName(fp.getSequenceName().name());
+            metadata.setCreatorUuid(fp.getCreator() instanceof Player p ? p.getUniqueId() : null);
+            metadata.setCreatorName(fp.getCreator().getName());
+            metadata.setCreatedAt(System.currentTimeMillis());
+            metadata.setSpawnedAt(new FakeplayerMetadata.SpawnLocation(spawnedAt));
+            metadata.setOptions(new FakeplayerMetadata.SpawnOptions());
+            metadata.getOptions().setInvulnerable(fp.getPlayer().isInvulnerable());
+            metadata.getOptions().setCollidable(fp.getPlayer().isCollidable());
+            metadata.getOptions().setPickupItems(fp.getPlayer().getCanPickupItems());
+
+            metadataStore.add(metadata);
+            log.info("已保存假人元数据: " + fp.getName());
+        } catch (Exception e) {
+            log.warning("保存假人元数据失败: " + fp.getName() + ", " + e.getMessage());
+        }
+    }
+
+    /**
+     * 更新假人元数据中的当前位置
+     *
+     * @param fp 假人
+     */
+    private void updateMetadataLocation(@NotNull Fakeplayer fp) {
+        try {
+            var allMetadata = metadataStore.load();
+            var metadata = allMetadata.stream()
+                    .filter(m -> m.getUuid().equals(fp.getUUID()))
+                    .findFirst()
+                    .orElse(null);
+
+            if (metadata != null) {
+                // 更新当前位置
+                var currentLocation = fp.getPlayer().getLocation();
+                metadata.setSpawnedAt(new FakeplayerMetadata.SpawnLocation(currentLocation));
+
+                // 更新选项
+                metadata.setOptions(new FakeplayerMetadata.SpawnOptions());
+                metadata.getOptions().setInvulnerable(fp.getPlayer().isInvulnerable());
+                metadata.getOptions().setCollidable(fp.getPlayer().isCollidable());
+                metadata.getOptions().setPickupItems(fp.getPlayer().getCanPickupItems());
+
+                metadataStore.save(allMetadata);
+                log.fine("已更新假人位置: " + fp.getName());
+            }
+        } catch (Exception e) {
+            log.warning("更新假人位置失败: " + fp.getName() + ", " + e.getMessage());
+        }
+    }
+
+    /**
+     * 移除假人元数据
+     *
+     * @param uuid 假人 UUID
+     */
+    private void removeMetadata(@NotNull UUID uuid) {
+        try {
+            metadataStore.remove(uuid);
+            log.info("已移除假人元数据: " + uuid);
+        } catch (Exception e) {
+            log.warning("移除假人元数据失败: " + uuid + ", " + e.getMessage());
+        }
     }
 
 }

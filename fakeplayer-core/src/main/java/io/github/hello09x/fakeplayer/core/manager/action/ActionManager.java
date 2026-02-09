@@ -8,6 +8,8 @@ import io.github.hello09x.fakeplayer.api.spi.ActionTicker;
 import io.github.hello09x.fakeplayer.api.spi.ActionType;
 import io.github.hello09x.fakeplayer.api.spi.NMSBridge;
 import io.github.hello09x.fakeplayer.core.Main;
+import io.github.hello09x.fakeplayer.core.metadata.ActionMetadata;
+import io.github.hello09x.fakeplayer.core.metadata.FakeplayerMetadataStore;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -25,12 +27,16 @@ public class ActionManager {
     private final Map<UUID, Map<ActionType, ActionTicker>> managers = new HashMap<>();
 
     private final NMSBridge bridge;
+    private final FakeplayerMetadataStore metadataStore;
 
 
     @Inject
-    public ActionManager(NMSBridge bridge) {
+    public ActionManager(NMSBridge bridge, FakeplayerMetadataStore metadataStore) {
         this.bridge = bridge;
+        this.metadataStore = metadataStore;
         Bukkit.getScheduler().runTaskTimer(Main.getInstance(), this::tick, 0, 1);
+        // 定期保存动作状态（每 5 秒 = 100 ticks）
+        Bukkit.getScheduler().runTaskTimerAsynchronously(Main.getInstance(), this::saveAllActions, 100L, 100L);
     }
 
     public boolean hasActiveAction(
@@ -105,6 +111,72 @@ public class ActionManager {
             if (entry.getValue().isEmpty()) {
                 itr.remove();
             }
+        }
+    }
+
+    /**
+     * 保存所有假人的动作状态到元数据
+     */
+    private void saveAllActions() {
+        if (managers.isEmpty()) {
+            return;
+        }
+
+        try {
+            var allMetadata = metadataStore.load();
+            if (allMetadata.isEmpty()) {
+                return;
+            }
+
+            boolean updated = false;
+            for (var metadata : allMetadata) {
+                var player = Bukkit.getPlayer(metadata.getUuid());
+                if (player == null || !player.isValid()) {
+                    continue;
+                }
+
+                var actions = managers.get(metadata.getUuid());
+                if (actions == null || actions.isEmpty()) {
+                    // 如果没有活跃动作，清空元数据中的动作列表
+                    if (!metadata.getActions().isEmpty()) {
+                        metadata.getActions().clear();
+                        updated = true;
+                    }
+                    continue;
+                }
+
+                // 转换动作状态到元数据格式
+                var actionList = new ArrayList<ActionMetadata>();
+                for (var entry : actions.entrySet()) {
+                    var ticker = entry.getValue();
+                    var setting = ticker.getSetting();
+
+                    // 跳过已停止的动作（remains = 0 表示已停止）
+                    if (setting.remains == 0) {
+                        continue;
+                    }
+
+                    var actionMeta = new ActionMetadata();
+                    actionMeta.setType(entry.getKey());
+                    actionMeta.setRemains(setting.remains);
+                    actionMeta.setInterval(setting.interval);
+
+                    actionList.add(actionMeta);
+                }
+
+                // 检查是否有变化
+                if (!actionList.equals(metadata.getActions())) {
+                    metadata.setActions(actionList);
+                    updated = true;
+                }
+            }
+
+            if (updated) {
+                metadataStore.save(allMetadata);
+                log.fine("已保存 " + allMetadata.size() + " 个假人的动作状态");
+            }
+        } catch (Exception e) {
+            log.warning("保存动作状态失败: " + e.getMessage());
         }
     }
 
