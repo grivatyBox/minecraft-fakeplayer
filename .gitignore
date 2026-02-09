@@ -130,3 +130,20 @@ server/
 buildtool/
 
 .flattened-pom.xml
+
+# Claude Code
+.claude/
+
+# BuildTools
+BuildData/
+Bukkit/
+CraftBukkit/
+Spigot/
+apache-maven*/
+BuildTools/
+
+# OpenSpec
+openspec/
+
+# Other
+nul
