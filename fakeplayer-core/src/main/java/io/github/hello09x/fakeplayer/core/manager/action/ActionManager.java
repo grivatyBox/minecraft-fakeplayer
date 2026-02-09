@@ -115,6 +115,14 @@ public class ActionManager {
     }
 
     /**
+     * 立即保存所有假人的动作状态到元数据
+     * 用于假人下线或服务器关闭前确保数据不丢失
+     */
+    public void saveNow() {
+        saveAllActions();
+    }
+
+    /**
      * 保存所有假人的动作状态到元数据
      */
     private void saveAllActions() {

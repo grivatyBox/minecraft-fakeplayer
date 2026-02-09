@@ -15,6 +15,7 @@ import io.github.hello09x.fakeplayer.core.entity.Fakeplayer;
 import io.github.hello09x.fakeplayer.core.entity.SpawnOption;
 import io.github.hello09x.fakeplayer.core.manager.feature.FakeplayerFeatureManager;
 import io.github.hello09x.fakeplayer.core.manager.naming.NameManager;
+import io.github.hello09x.fakeplayer.core.manager.action.ActionManager;
 import io.github.hello09x.fakeplayer.core.metadata.FakeplayerMetadata;
 import io.github.hello09x.fakeplayer.core.metadata.FakeplayerMetadataStore;
 import io.github.hello09x.fakeplayer.core.repository.model.Feature;
@@ -58,16 +59,18 @@ public class FakeplayerManager {
     private final NMSBridge nms;
     private final FakeplayerConfig config;
     private final FakeplayerMetadataStore metadataStore;
+    private final ActionManager actionManager;
     private final ScheduledExecutorService lagMonitor;
 
     @Inject
-    public FakeplayerManager(NameManager nameManager, FakeplayerList playerList, FakeplayerFeatureManager featureManager, NMSBridge nms, FakeplayerConfig config, FakeplayerMetadataStore metadataStore) {
+    public FakeplayerManager(NameManager nameManager, FakeplayerList playerList, FakeplayerFeatureManager featureManager, NMSBridge nms, FakeplayerConfig config, FakeplayerMetadataStore metadataStore, ActionManager actionManager) {
         this.nameManager = nameManager;
         this.playerList = playerList;
         this.featureManager = featureManager;
         this.nms = nms;
         this.config = config;
         this.metadataStore = metadataStore;
+        this.actionManager = actionManager;
 
         this.lagMonitor = Executors.newSingleThreadScheduledExecutor();
         this.lagMonitor.scheduleWithFixedDelay(() -> {
@@ -277,6 +280,8 @@ public class FakeplayerManager {
         }
         // 更新元数据中的当前位置
         this.updateMetadataLocation(fakeplayer);
+        // 立即保存所有假人的动作状态，避免因定时保存间隔导致数据丢失
+        this.actionManager.saveNow();
         // 不删除元数据，保留以便下次启动时恢复
     }
 
@@ -543,6 +548,11 @@ public class FakeplayerManager {
         }
     }
 
+    /**
+     * 更新假人元数据中的当前位置
+     *
+     * @param fp 假人
+     */
     /**
      * 更新假人元数据中的当前位置
      *
