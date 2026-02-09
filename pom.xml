@@ -20,7 +20,8 @@
         <module>fakeplayer-v1_20_4</module>
         <module>fakeplayer-v1_20_5</module>
         <module>fakeplayer-v1_20_6</module>
-        <module>fakeplayer-v1_21</module>
+        <!-- 1.21 is actually 1.21.1, use fakeplayer-v1_21_1 instead -->
+        <!-- <module>fakeplayer-v1_21</module> -->
         <module>fakeplayer-v1_21_1</module>
         <module>fakeplayer-v1_21_3</module>
         <module>fakeplayer-v1_21_4</module>

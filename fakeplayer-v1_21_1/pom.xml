@@ -39,19 +39,6 @@
         </dependency>
 
         <dependency>
-            <groupId>io.github.hello09x.fakeplayer</groupId>
-            <artifactId>fakeplayer-v1_21</artifactId>
-            <version>${revision}</version>
-            <scope>provided</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
             <groupId>org.spigotmc</groupId>
             <artifactId>spigot</artifactId>
             <version>${nms.version}</version>
